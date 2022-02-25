@@ -34,12 +34,19 @@ def get_transaction_cost(tx):
     return tx_cost
 
 def get_block_cost(block_num):
-    block_cost = 1  #YOUR CODE HERE
+    block_cost=0
+    for t in  w3.eth.get_block(block_num).transactions:
+        block_cost += get_transaction_cost(t)
     return block_cost
 
 # Return the hash of the most expensive transaction
 def get_most_expensive_transaction(block_num):
-    max_tx = HexBytes('0xf7f4905225c0fde293e2fd3476e97a9c878649dd96eb02c86b86be5b92d826b6')  #YOUR CODE HERE
+    maxCost=0
+    max_tx = NULL
+    for t in  w3.eth.get_block(block_num).transactions:
+        if get_transaction_cost(t)>maxCost:
+            maxCost = get_transaction_cost(t)
+            max_tx = HexBytes(t)
     return max_tx
 
 
