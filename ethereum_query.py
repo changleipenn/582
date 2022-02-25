@@ -22,11 +22,11 @@ def get_transaction(tx):
 # Return the gas price used by a particular transaction,
 #   tx is the transaction
 def get_gas_price(tx):
-    gas_price = w3.eth.gas_price/10**8 #YOUR CODE HERE
+    gas_price = w3.eth.get_transaction(tx)["gasPrice"] #YOUR CODE HERE
     return gas_price
 
 def get_gas(tx):
-    gasDS = w3.eth.get_transaction_receipt(tx)
+    gasDS = w3.eth.get_transaction_receipt(tx)["gasUsed"]
     #gas = 1 #YOUR CODE HERE
     return gasDS
 
@@ -44,4 +44,4 @@ def get_most_expensive_transaction(block_num):
     return max_tx
 
 
-#get_gas_price(NULL)
+get_gas_price(NULL)
