@@ -67,10 +67,10 @@ def send_tokens( receiver_pk, tx_amount ):
     # print("Fee: {} microAlgos".format(params.fee) ) 
 
 
-    account_info = algod_client.account_info(my_address)
-    print("Final Account balance: {} microAlgos".format(account_info.get('amount')) + "\n")
+    #account_info = algod_client.account_info(my_address)
+    #print("Final Account balance: {} microAlgos".format(account_info.get('amount')) + "\n")
 
-    return sender_pk, txid
+    return address, txid
 
 # Function from Algorand Inc.
 def wait_for_confirmation(client, txid):
