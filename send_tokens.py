@@ -38,7 +38,7 @@ def send_tokens( receiver_pk, tx_amount ):
     params = acl.suggested_params()
     # comment out the next two (2) lines to use suggested fees
     params.flat_fee = True
-    params.fee = constants.MIN_TXN_FEE 
+    params.fee = params.min_fee
 
     unsigned_txn = transaction.PaymentTxn(address, params.fee, params.first, params.last, params.gh, receiver_pk, tx_amount, flat_fee=True)
     #unsigned_txn = transaction.PaymentTxn(address, params, receiver, amount, None, note)
