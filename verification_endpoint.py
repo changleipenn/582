@@ -17,11 +17,12 @@ def verify():
     message = content['payload']['message']
     pk = content['payload']['pk']
     platform = content['payload']['platform']
+    payload = content['payload']
 
     if platform == "Ethereum":
-        result = eth_account.Account.recover_message(message,sig.hex()) == pk
+        result = eth_account.Account.recover_message(payload,sig.hex()) == pk
     else:
-        result = algosdk.util.verify_bytes(message.encode('utf-8'),sig,pk)
+        result = algosdk.util.verify_bytes(payload.encode('utf-8'),sig,pk)
 
     result = True #Should only be true if signature validates
     return jsonify(result)
