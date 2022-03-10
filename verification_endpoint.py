@@ -20,7 +20,8 @@ def verify():
     payload = content['payload']
 
     if platform == "Ethereum":
-        result = eth_account.Account.recover_message(message,sig.hex()) == pk
+        eth_encoded_msg = eth_account.messages.encode_defunct(text=payload)
+        result = eth_account.Account.recover_message(eth_encoded_msg,sig.hex()) == pk
     else:
         result = algosdk.util.verify_bytes(message.encode('utf-8'),sig,pk)
 
