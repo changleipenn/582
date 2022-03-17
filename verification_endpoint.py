@@ -20,7 +20,7 @@ def verify():
     payload = content['payload']
     payload2= json.dumps(payload)
 
-
+    #check result
     result = False
     if platform == "Ethereum":
         eth_encoded_msg = eth_account.messages.encode_defunct(text=payload2)
