@@ -24,7 +24,8 @@ def verify():
         eth_encoded_msg = eth_account.messages.encode_defunct(text=payload2)
         result = eth_account.Account.recover_message(eth_encoded_msg,sig) == pk
     else:
-        result = algosdk.util.verify_bytes(message.encode('utf-8'),sig,pk)
+        #result = algosdk.util.verify_bytes(message.encode('utf-8'),sig,pk)
+        result = algosdk.util.verify_bytes(payload2.encode('utf-8'),sig,pk)
 
     #result = True #Should only be true if signature validates
     return jsonify(result)
