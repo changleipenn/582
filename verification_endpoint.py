@@ -20,14 +20,20 @@ def verify():
     payload = content['payload']
     payload2= json.dumps(payload)
 
+
+    result = False
     if platform == "Ethereum":
         eth_encoded_msg = eth_account.messages.encode_defunct(text=payload2)
-        result = (eth_account.Account.recover_message(eth_encoded_msg,sig) == pk)
+        if (eth_account.Account.recover_message(eth_encoded_msg,sig) == pk):
+            result = True
     else:
         #result = algosdk.util.verify_bytes(message.encode('utf-8'),sig,pk)
-        result = algosdk.util.verify_bytes(payload2.encode('utf-8'),sig,pk)
+        if algosdk.util.verify_bytes(payload2.encode('utf-8'),sig,pk):
+            result = True
 
     #result = True #Should only be true if signature validates
+    
+
     return jsonify(result)
 
 if __name__ == '__main__':
