@@ -25,7 +25,7 @@ def verify():
     else:
         result = algosdk.util.verify_bytes(message.encode('utf-8'),sig,pk)
 
-    result = True #Should only be true if signature validates
+    #result = True #Should only be true if signature validates
     return jsonify(result)
 
 if __name__ == '__main__':
