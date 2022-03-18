@@ -19,7 +19,9 @@ def verify():
     platform = content['payload']['platform']
     payload = content['payload']
     payload2= json.dumps(payload)
-
+    print(platform)
+    print(pk)
+    print(sig)
     #check result
     result = False
     if platform == "Ethereum":
