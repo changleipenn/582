@@ -20,14 +20,14 @@ def ZK_equality(G,H):
 
     # This is Peggy's secret bit.
     #top_secret_bit = 1
-    m = 1
+    m = Secret()
 
     # A Pedersen commitment to the secret bit.
     #C = top_secret_bit * G + r.value * H
-    C1 = r1 * G
-    C2 = r1 * H  + m * G
-    D1 = r2 * G
-    D2 =  r2* H + m * G
+    C1 = r1.value * G
+    C2 = r1.value * H  + m.value * G
+    D1 = r2.value * G
+    D2 =  r2.value* H + m.value * G
     
 
     # Peggy's definition of the proof statement, and proof generation.
