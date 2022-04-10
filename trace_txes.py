@@ -37,11 +37,47 @@ class TXO:
 
     @classmethod
     def from_tx_hash(cls,tx_hash,n=0):
+
+        #connect to bitcoin blockchain, retrive nth output of the transaction with the given hash
         tx = rpc_connection.getrawtransaction(tx_hash,True)
-        
-        #YOUR CODE HERE
+        # it should create a new object with the fields, 'tx_hash’, 'n’, 'amount’, ‘owner’ and ‘time’ set to the values retrieved from the blockchain
+        amount = tx["vout"][n]["value"]*100000000
+        owner = tx["vout"][n]["scriptPubKey"]["addresses"][0]
+        time = datetime.fromtimestamp(tx["time"])
+        return TXO( tx_hash, n, amount, owner, time)
+
+
 
     def get_inputs(self,d=1):
-        pass
-        #YOUR CODE HERE
+        if d == 0:
+            return
+        tx = rpc_connection.getrawtransaction(self.tx_hash,True)
+        inputLen = len(tx["vin"])
+        for i in range(inputLen):
+            inputTx = tx["vin"][i]["txid"]
+            inputI = tx["vin"][i]["vout"]
+            newInput =  TXO.from_tx_hash(inputTx,inputI)
+            self.inputs.append(newInput)
+            newInput.get_inputs(d-1)
+            #self.getInputForHash(newInput.tx_hash,d-1)
+        return
 
+        #YOUR CODE HERE
+        #self.getInputForHash(self.tx_hash,d)
+
+
+    # def getInputForHash(self,tx_hash, d):
+    #     if d == 0:
+    #         return
+    #     tx = rpc_connection.getrawtransaction(tx_hash,True)
+    #     inputLen = len(tx["vin"])
+    #     for i in range(inputLen):
+    #         inputTx = tx["vin"][i]["txid"]
+    #         inputI = tx["vin"][i]["vout"]
+    #         newInput =  TXO.from_tx_hash(inputTx,inputI)
+    #         self.inputs.append(newInput)
+    #         #self.getInputForHash(newInput.tx_hash,d-1)
+    #     return
+
+
+        
