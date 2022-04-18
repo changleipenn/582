@@ -25,9 +25,9 @@ def _attack() -> bool:
 @payable
 def attack(dao_address:address):
     self.dao_address = dao_address
-    deposit_amount: uint256 = msg.value    
+    amount: uint256 = msg.value    
  
-    # Attack cannot withdraw more than what exists in the DAO
+
     if dao_address.balance < msg.value:
         amount= dao_address.balance
     # TODO: make the deposit into the DAO   
@@ -41,7 +41,7 @@ def attack(dao_address:address):
 @external
 @payable
 def __default__():
-    # This method gets invoked when ETH is sent to this contract's address (i.e., when "withdraw" is called on the DAO contract)
+    
     # TODO: Add code here to complete the recursive call
     if self.dao_address == msg.sender:
         self._attack()
