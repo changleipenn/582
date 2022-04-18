@@ -39,14 +39,14 @@ def provideLiquidity(tokenA_addr: address, tokenB_addr: address, tokenA_quantity
 def tradeTokens(sell_token: address, sell_quantity: uint256):
 	assert sell_token == self.tokenA.address or sell_token == self.tokenB.address
 	#Your code here
-	if self_token == tokenA:
+	if sell_token == self.tokenA.address:
 		eth_in_purchase: uint256 = sell_quantity
 		new_total_eth: uint256 = self.tokenAQty + eth_in_purchase
 		new_total_tokens: uint256 = self.invariant / new_total_eth
 		self.tokenB.transfer(msg.sender, self.tokenBQty - new_total_tokens)
 		self.tokenAQty = new_total_eth
 		self.tokenBQty = new_total_tokens
-	elif self_token == tokenB:
+	elif sell_token == self.tokenB.address:
 		eth_in_purchase: uint256 = sell_quantity
 		new_total_eth: uint256 = self.tokenBQty + eth_in_purchase
 		new_total_tokens: uint256 = self.invariant / new_total_eth
