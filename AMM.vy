@@ -40,19 +40,21 @@ def tradeTokens(sell_token: address, sell_quantity: uint256):
 	assert sell_token == self.tokenA.address or sell_token == self.tokenB.address
 	#Your code here
 	if sell_token == self.tokenA.address:
-		eth_in_purchase: uint256 = sell_quantity
-		new_total_eth: uint256 = self.tokenAQty + eth_in_purchase
-		new_total_tokens: uint256 = self.invariant / new_total_eth
-		self.tokenB.transfer(msg.sender, self.tokenBQty - new_total_tokens)
-		self.tokenAQty = new_total_eth
-		self.tokenBQty = new_total_tokens
+		amountA = self.tokenAQty + sell_quantity
+		amountB = self.invariant / amountA 
+		transferAmountB = self.tokenBQty - amountB
+		self.tokenA.transferFrom(msg.sender, self, sell_quantity)
+		self.tokenB.transfer(msg.sender, transferAmountB)
+		self.tokenAQty = amountA
+		self.tokenBQty = amountB
 	elif sell_token == self.tokenB.address:
-		eth_in_purchase: uint256 = sell_quantity
-		new_total_eth: uint256 = self.tokenBQty + eth_in_purchase
-		new_total_tokens: uint256 = self.invariant / new_total_eth
-		self.tokenA.transfer(msg.sender, self.tokenAQty - new_total_tokens)
-		self.tokenBQty = new_total_eth
-		self.tokenAQty = new_total_tokens
+		amountB = self.tokenBQty + sell_quantity
+		amountA = self.invariant / amountB 
+		transferAmountA = self.tokenAQty - amountA
+		self.tokenB.transferFrom(msg.sender, self, sell_quantity)
+		self.tokenA.transfer(msg.sender, transferAmountA)
+		self.tokenAQty = amountA
+		self.tokenBQty = amountB
 
 # Owner can withdraw their funds and destroy the market maker
 @external
