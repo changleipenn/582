@@ -1,79 +1,65 @@
 #!/usr/bin/python3
 
 from algosdk.v2client import algod
-from algosdk import mnemonic
-from algosdk import transaction
-from algosdk import constants
-from algosdk import account, encoding
+from algosdk.v2client import indexer
+from algosdk import account
+from algosdk.future import transaction
 
-#Connect to Algorand node maintained by PureStake
-algod_address = "https://testnet-algorand.api.purestake.io/ps2"
-algod_token = "B3SU4KcVKi94Jap2VXkK83xx38bsv95K5UZm2lab"
-#algod_token = 'IwMysN3FSZ8zGVaQnoUIJ9RXolbQ5nRY62JRqF2H'
-headers = {
-   "X-API-Key": algod_token,
-}
+def connect_to_algo(connection_type="indexer"):
+    #Connect to Algorand node maintained by PureStake
+    algod_token = "B3SU4KcVKi94Jap2VXkK83xx38bsv95K5UZm2lab"
+    
+    if connection_type == "indexer":
+        
+        algod_address = "https://testnet-algorand.api.purestake.io/idx2"
+        headers = {
+            "X-API-Key": "B3SU4KcVKi94Jap2VXkK83xx38bsv95K5UZm2lab",
+            }
+        # TODO: return an instance of the v2client indexer. This is used for checking payments for tx_id's
+        return indexer.IndexerClient("", algod_address, headers)
+    else:
+        # TODO: return an instance of the client for sending transactions
+        # Tutorial Link: https://developer.algorand.org/tutorials/creating-python-transaction-purestake-api/
+        algod_address = "https://testnet-algorand.api.purestake.io/ps2"
 
-acl = algod.AlgodClient(algod_token, algod_address, headers)
-min_balance = 100000 #https://developer.algorand.org/docs/features/accounts/#minimum-balance
+    return None
 
+def send_tokens_algo( acl, sender_sk, txes):
+    params = acl.suggested_params
+    
+    # TODO: You might want to adjust the first/last valid rounds in the suggested_params
+    #       See guide for details
 
-# generate an account
-private_key,address = "+BGLUlW6kQ1Bl77GxOPc4fgakcEU4/4oueynIDpQfGfj5JAyhmRn+B/bge1TcsXe4naOEMssSOZMgH4mbf8iHw==","4PSJAMUGMRT7QH63QHWVG4WF33RHNDQQZMWERZSMQB7CM3P7EIP52WTYUM"
-#private_key, address = account.generate_account()
-print("Private key:", private_key)
-print("Address:", address)
+    # TODO: For each transaction, do the following:
+    #       - Create the Payment transaction 
+    #       - Sign the transaction
+    
+    # TODO: Return a list of transaction id's
 
+    sender_pk = account.address_from_private_key(sender_sk)
 
-def send_tokens( receiver_pk, tx_amount ):
-    params = acl.suggested_params()
-    gen_hash = params.gh
-    first_valid_round = params.first
-    tx_fee = params.min_fee
-    last_valid_round = params.last
+    tx_ids = []
+    for i,tx in enumerate(txes):
+        unsigned_tx = "Replace me with a transaction object"
 
-    #Your code here
-    ########################################################
-    ##https://developer.algorand.org/docs/sdks/python/#install-sandbox
-    params = acl.suggested_params()
-    # comment out the next two (2) lines to use suggested fees
-    params.flat_fee = True
-    params.fee = params.min_fee
+        # TODO: Sign the transaction
+        signed_tx = "Replace me with a SignedTransaction object"
+        
+        try:
+            print(f"Sending {tx['amount']} microalgo from {sender_pk} to {tx['receiver_pk']}" )
+            
+            # TODO: Send the transaction to the testnet
+            
+            tx_id = "Replace me with the tx_id"
+            txinfo = wait_for_confirmation_algo(acl, txid=tx_id )
+            print(f"Sent {tx['amount']} microalgo in transaction: {tx_id}\n" )
+        except Exception as e:
+            print(e)
 
-    unsigned_txn = transaction.PaymentTxn(address, params.fee, params.first, params.last, params.gh, receiver_pk, tx_amount, flat_fee=True)
-    #unsigned_txn = transaction.PaymentTxn(address, params, receiver, amount, None, note)
-
-    #sign transaction
-    signed_txn = unsigned_txn.sign(private_key)
-
-
-    #submit transaction
-    txid = acl.send_transaction(signed_txn)
-    print("Successfully sent transaction with txID: {}".format(txid))
-
-    # # wait for confirmation 
-    # try:
-    #     confirmed_txn = transaction.wait_for_confirmation(algod_client, txid, 4)  
-    # except Exception as err:
-    #     print(err)
-    #     return
-
-    # print("Transaction information: {}".format(
-    #     json.dumps(confirmed_txn, indent=4)))
-    # print("Decoded note: {}".format(base64.b64decode(
-    #     confirmed_txn["txn"]["txn"]["note"]).decode()))
-    # print("Starting Account balance: {} microAlgos".format(account_info.get('amount')) )
-    # print("Amount transfered: {} microAlgos".format(amount) )    
-    # print("Fee: {} microAlgos".format(params.fee) ) 
-
-
-    #account_info = algod_client.account_info(my_address)
-    #print("Final Account balance: {} microAlgos".format(account_info.get('amount')) + "\n")
-
-    return address, txid
+    return []
 
 # Function from Algorand Inc.
-def wait_for_confirmation(client, txid):
+def wait_for_confirmation_algo(client, txid):
     """
     Utility function to wait until the transaction is
     confirmed before proceeding.
@@ -88,9 +74,55 @@ def wait_for_confirmation(client, txid):
     print("Transaction {} confirmed in round {}.".format(txid, txinfo.get('confirmed-round')))
     return txinfo
 
+##################################
+
+from web3 import Web3
+from web3.middleware import geth_poa_middleware
+from web3.exceptions import TransactionNotFound
+import json
+import progressbar
 
 
+def connect_to_eth():
+    IP_ADDR='3.23.118.2' #Private Ethereum
+    PORT='8545'
+
+    w3 = Web3(Web3.HTTPProvider('http://' + IP_ADDR + ':' + PORT))
+    w3.middleware_onion.inject(geth_poa_middleware, layer=0) #Required to work on a PoA chain (like our private network)
+    w3.eth.account.enable_unaudited_hdwallet_features()
+    if w3.isConnected():
+        return w3
+    else:
+        print( "Failed to connect to Eth" )
+        return None
+
+def wait_for_confirmation_eth(w3, tx_hash):
+    print( "Waiting for confirmation" )
+    widgets = [progressbar.BouncingBar(marker=progressbar.RotatingMarker(), fill_left=False)]
+    i = 0
+    with progressbar.ProgressBar(widgets=widgets, term_width=1) as progress:
+        while True:
+            i += 1
+            progress.update(i)
+            try:
+                receipt = w3.eth.get_transaction_receipt(tx_hash)
+            except TransactionNotFound:
+                continue
+            break 
+    return receipt
 
 
+####################
+def send_tokens_eth(w3,sender_sk,txes):
+    sender_account = w3.eth.account.privateKeyToAccount(sender_sk)
+    sender_pk = sender_account._address
 
-#send_tokens("HZ57J3K46JIJXILONBBZOHX6BKPXEM2VVXNRFSUED6DKFD5ZD24PMJ3MVA",1000000)
+    # TODO: For each of the txes, sign and send them to the testnet
+    # Make sure you track the nonce -locally-
+    
+    tx_ids = []
+    for i,tx in enumerate(txes):
+        # Your code here
+        continue
+
+    return tx_ids
