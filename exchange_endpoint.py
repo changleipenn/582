@@ -340,6 +340,8 @@ def process_order(order):
 
         matchOrder.counterparty_id=order_obj.id
         order_obj.counterparty_id=matchOrder.id
+        g.session.flush()
+        g.session.commit()
         if matchOrder.buy_amount > order_obj.sell_amount:
                 order_dict = { 
                         'buy_currency': matchOrder.buy_currency,
