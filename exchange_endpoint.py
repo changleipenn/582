@@ -124,8 +124,7 @@ def log_message(message_dict):
     return
 
 #global variable for connection to algo
-
-acl = connect_to_algo(connection_type="indexer")
+#acl = connect_to_algo()
 
 def get_algo_keys():
     
@@ -172,6 +171,7 @@ def send_algo(acl,  receiver_pk, amt, nonce_offset=0 ):
     sender_sk, sender_pk = get_algo_keys() #get_algo_sender()
     return send_tokens_algo( acl, sender_sk, receiver_pk, amt,nonce_offset )
 
+from algosdk.future import transaction
 def send_tokens_algo( acl, sender_sk, receiver_pk, tx_amount,nonce_offset=0 ):
 	sp = acl.suggested_params()
 
@@ -280,7 +280,7 @@ def process_order(order):
         order_obj = Order( sender_pk=order['sender_pk'],receiver_pk=order['receiver_pk'], buy_currency=order['buy_currency'], sell_currency=order['sell_currency'], buy_amount=order['buy_amount'], sell_amount=order['sell_amount'], creator_id=order['creator_id'] )
     
     for order in [order_obj]:
-        print( order.buy_currency +" "+ str(order.buy_amount)+ " "+ order.sell_currency +" "+ str(order.sell_amount)+" "+str(order.filled) +" "+str(order.creator_id))
+        print("prosessing buy "+ order.buy_currency +" "+ str(order.buy_amount)+ " sell "+ order.sell_currency +" "+ str(order.sell_amount)+" "+str(order.filled) +" "+str(order.creator_id))
 
     g.session.add(order_obj)
     g.session.flush()
@@ -323,17 +323,17 @@ def process_order(order):
         #fill transaction 
         # matchOrder(buy_currency, min(matchorder.buy_amount,order_obj.sell_amount ) sender_pk
         # order_obj(buy_currency, min(order_obj.buy_amount,matchOrder.sell_amount) sender_pk
-        if matchOrder.buy_currency == "Algorand": 
-            txid1 = send_algo(acl,  matchOrder.sender_pk, min(matchOrder.buy_amount,order_obj.sell_amount ) , nonce_offset=0 ) #send algo to the matchOrder
+        if matchOrder.buy_currency == "Algorand":  #matchorder buy algorand sell eth,
+            txid1 = send_algo(g.acl,  matchOrder.receiver_pk, min(matchOrder.buy_amount,order_obj.sell_amount ) , nonce_offset=0 ) #send algo to the matchOrder
             matchOrder.tx_id = txid1
-            txid2 = send_eth(w3,order_obj.sender_pk,min(order_obj.buy_amount,matchOrder.sell_amount),nonce_offset=0)#send eth to the order_obj
+            txid2 = send_eth(w3,order_obj.receiver_pk,min(order_obj.buy_amount,matchOrder.sell_amount),nonce_offset=0)#send eth to the order_obj
             order_obj.tx_id = txid2
             g.session.flush()
             g.session.commit()
         else:
-            txid1 = send_eth(w3,  matchOrder.sender_pk, min(matchOrder.buy_amount,order_obj.sell_amount ) , nonce_offset=0 ) #send algo to the matchOrder
+            txid1 = send_eth(w3,  matchOrder.receiver_pk, min(matchOrder.buy_amount,order_obj.sell_amount ) , nonce_offset=0 ) #send algo to the matchOrder
             matchOrder.tx_id = txid1
-            txid2 = send_algo(acl,order_obj.sender_pk,min(order_obj.buy_amount,matchOrder.sell_amount),nonce_offset=0)#send eth to the order_obj
+            txid2 = send_algo(g.acl,order_obj.receiver_pk,min(order_obj.buy_amount,matchOrder.sell_amount),nonce_offset=0)#send eth to the order_obj
             order_obj.tx_id = txid2
             g.session.flush()
             g.session.commit()
@@ -517,6 +517,9 @@ def trade():
             # g.session.commit()
             # return jsonify(order)
             process_order(order)
+            printOrderBook()
+
+
             return jsonify(True)
             
 
@@ -527,7 +530,13 @@ def trade():
             g.session.commit()
             return jsonify(False)
 
-
+def printOrderBook():
+            print("current order book")
+            for u in g.session.query(Order).all():
+                dic = u.__dict__
+                newDic = {k:dic[k] for k in ["sender_pk","receiver_pk","buy_currency",
+                "sell_currency","buy_amount","sell_amount","signature","tx_id","filled","creator_id"]}
+                print("buy "+newDic["buy_currency"] +" "+ str(newDic["buy_amount"] )+ " sell "+ newDic["sell_currency"]  +" "+ str(newDic["sell_amount"] )+" "+ str(newDic["tx_id"]) +" "+str(newDic["filled"]) +" "+str(newDic["creator_id"]))
 
 @app.route('/order_book')
 def order_book():
