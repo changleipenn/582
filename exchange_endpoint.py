@@ -319,6 +319,15 @@ def process_order(order):
     #if match is found between order and existing order
         matchOrder.filled = datetime.now()
         order_obj.filled =datetime.now()
+        matchOrder.counterparty_id=order_obj.id
+        order_obj.counterparty_id=matchOrder.id
+        g.session.flush()
+        g.session.commit()
+        
+
+
+
+
 
         #fill transaction 
         # matchOrder(buy_currency, min(matchorder.buy_amount,order_obj.sell_amount ) sender_pk
@@ -328,6 +337,25 @@ def process_order(order):
             matchOrder.tx_id = txid1
             txid2 = send_eth(w3,order_obj.receiver_pk,min(order_obj.buy_amount,matchOrder.sell_amount),nonce_offset=0)#send eth to the order_obj
             order_obj.tx_id = txid2
+
+            #generate transaction in database
+            tx_obj1 = TX( 
+                platform = "Algorand",
+                receiver_pk = matchOrder.receiver_pk, #The transaction receiver (the transaction sender should be the exchange itself)
+                order_id = matchOrder.id, #The id of the order that created the transaction
+                tx_id = txid1#The transaction ID of the executed transaction (should correspond to a transaction on the platform given by 'platform')
+            )
+            g.session.add(tx_obj1)
+            tx_obj2 = TX( 
+                platform = "Ethereum",
+                receiver_pk = order_obj.receiver_pk, #The transaction receiver (the transaction sender should be the exchange itself)
+                order_id = order_obj.id, #The id of the order that created the transaction
+                tx_id = txid2#The transaction ID of the executed transaction (should correspond to a transaction on the platform given by 'platform')
+            )
+            g.session.add(tx_obj2)
+
+
+
             g.session.flush()
             g.session.commit()
         else:
@@ -335,13 +363,28 @@ def process_order(order):
             matchOrder.tx_id = txid1
             txid2 = send_algo(g.acl,order_obj.receiver_pk,min(order_obj.buy_amount,matchOrder.sell_amount),nonce_offset=0)#send eth to the order_obj
             order_obj.tx_id = txid2
+
+            #generate transaction in database
+            tx_obj1 = TX( 
+                platform = "Ethereum",
+                receiver_pk = matchOrder.receiver_pk, #The transaction receiver (the transaction sender should be the exchange itself)
+                order_id = matchOrder.id, #The id of the order that created the transaction
+                tx_id = txid1#The transaction ID of the executed transaction (should correspond to a transaction on the platform given by 'platform')
+            )
+            g.session.add(tx_obj1)
+            tx_obj2 = TX( 
+                platform = "Algorand",
+                receiver_pk = order_obj.receiver_pk, #The transaction receiver (the transaction sender should be the exchange itself)
+                order_id = order_obj.id, #The id of the order that created the transaction
+                tx_id = txid2#The transaction ID of the executed transaction (should correspond to a transaction on the platform given by 'platform')
+            )
+            g.session.add(tx_obj2)
+
+
             g.session.flush()
             g.session.commit()
 
-        matchOrder.counterparty_id=order_obj.id
-        order_obj.counterparty_id=matchOrder.id
-        g.session.flush()
-        g.session.commit()
+
         if matchOrder.buy_amount > order_obj.sell_amount:
                 order_dict = { 
                         'buy_currency': matchOrder.buy_currency,
